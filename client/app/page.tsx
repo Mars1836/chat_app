@@ -1,10 +1,6 @@
-"use client";
-
-import { useState } from "react";
-import UserProfile from "@/components/user-profile";
-import UserList from "@/components/user-list";
-import ChatWindow from "@/components/chat-window";
-import type { User } from "@/types";
+"use client"
+import type { User } from "@/types"
+import LoginForm from "@/components/login-form"
 
 // Mock current user data
 const currentUser: User = {
@@ -14,7 +10,7 @@ const currentUser: User = {
   phone: "+1 (555) 123-4567",
   address: "123 Main St, City, Country",
   avatar: "/placeholder.svg?height=40&width=40",
-};
+}
 
 // Mock other users data
 const otherUsers: User[] = [
@@ -42,58 +38,42 @@ const otherUsers: User[] = [
     address: "101 Elm St, Suburb, Country",
     avatar: "/placeholder.svg?height=40&width=40",
   },
-];
+]
 
 interface ChatWindowInstance {
-  id: string;
-  user: User;
+  id: string
+  user: User
 }
 
 export default function Home() {
-  const [activeChats, setActiveChats] = useState<ChatWindowInstance[]>([]);
+  // const [activeChats, setActiveChats] = useState<ChatWindowInstance[]>([])
 
-  const startChat = (user: User) => {
-    if (!activeChats.find((chat) => chat.user.id === user.id)) {
-      setActiveChats((prev) => [
-        ...prev,
-        {
-          id: `chat-${Date.now()}`,
-          user,
-        },
-      ]);
-    }
-  };
+  // const startChat = (user: User) => {
+  //   if (!activeChats.find((chat) => chat.user.id === user.id)) {
+  //     setActiveChats((prev) => [
+  //       ...prev,
+  //       {
+  //         id: `chat-${Date.now()}`,
+  //         user,
+  //       },
+  //     ])
+  //   }
+  // }
 
-  const closeChat = (chatId: string) => {
-    setActiveChats((prev) => prev.filter((chat) => chat.id !== chatId));
-  };
+  // const closeChat = (chatId: string) => {
+  //   setActiveChats((prev) => prev.filter((chat) => chat.id !== chatId))
+  // }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto p-4 pb-32">
-        <h1 className="text-2xl font-bold mb-6">Chat Application</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1">
-            <UserProfile user={currentUser} />
-          </div>
-
-          <div className="md:col-span-2">
-            <UserList users={otherUsers} onStartChat={startChat} />
-          </div>
+    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+        <div className="flex flex-col space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">Enter your credentials to continue</p>
         </div>
-      </div>
-
-      <div className="fixed bottom-4 right-4 flex flex-row-reverse gap-3 z-50 items-end">
-        {activeChats.map((chat) => (
-          <ChatWindow
-            key={chat.id}
-            windowId={chat.id}
-            user={chat.user}
-            onClose={() => closeChat(chat.id)}
-          />
-        ))}
+        <LoginForm />
       </div>
     </div>
-  );
+  )
 }
+

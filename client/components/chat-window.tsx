@@ -1,56 +1,47 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import type { User } from "@/types";
-import { X, Send, Minimize } from "lucide-react";
-import socket from "@/lib/socket";
+import { useState, useEffect, useRef } from "react"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import type { User } from "@/types"
+import { X, Send, Minimize } from "lucide-react"
+import socket from "@/lib/socket"
 
 interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "other";
-  timestamp: number;
+  id: string
+  text: string
+  sender: "user" | "other"
+  timestamp: number
 }
 
 interface ChatWindowProps {
-  user: User;
-  onClose: () => void;
-  windowId: string;
+  user: User
+  onClose: () => void
+  windowId: string
 }
 
-export default function ChatWindow({
-  user,
-  onClose,
-  windowId,
-}: ChatWindowProps) {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [minimized, setMinimized] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+export default function ChatWindow({ user, onClose, windowId }: ChatWindowProps) {
+  const [message, setMessage] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
+  const [minimized, setMinimized] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Handle socket connection
   useEffect(() => {
     function onConnect() {
-      setIsConnected(true);
+      setIsConnected(true)
     }
 
     function onDisconnect() {
-      setIsConnected(false);
+      setIsConnected(false)
     }
 
     function onChatMessage(msg: string) {
-      if (msg.startsWith(`${user.name}:`)) return;
+      if (msg.startsWith(`${user.name}:`)) return
 
       setMessages((prev) => [
         ...prev,
@@ -60,33 +51,33 @@ export default function ChatWindow({
           sender: "other",
           timestamp: Date.now(),
         },
-      ]);
+      ])
     }
 
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on(`chat message ${windowId}`, onChatMessage);
+    socket.on("connect", onConnect)
+    socket.on("disconnect", onDisconnect)
+    socket.on(`chat message ${windowId}`, onChatMessage)
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off(`chat message ${windowId}`, onChatMessage);
-    };
-  }, [user.name, windowId]);
+      socket.off("connect", onConnect)
+      socket.off("disconnect", onDisconnect)
+      socket.off(`chat message ${windowId}`, onChatMessage)
+    }
+  }, [user.name, windowId])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (!minimized) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
-  }, [minimized]);
+  }, [minimized])
 
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (message.trim() && isConnected) {
-      const formattedMessage = `${user.name}: ${message}`;
+      const formattedMessage = `${user.name}: ${message}`
 
-      socket.emit("chat message", formattedMessage);
+      socket.emit("chat message", formattedMessage)
 
       setMessages((prev) => [
         ...prev,
@@ -96,16 +87,16 @@ export default function ChatWindow({
           sender: "user",
           timestamp: Date.now(),
         },
-      ]);
+      ])
 
-      setMessage("");
+      setMessage("")
     }
-  };
+  }
 
   const handleClose = () => {
-    socket.off(`chat message ${windowId}`);
-    onClose();
-  };
+    socket.off(`chat message ${windowId}`)
+    onClose()
+  }
 
   if (minimized) {
     return (
@@ -116,11 +107,7 @@ export default function ChatWindow({
         >
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/10">
-              <img
-                src={user.avatar || "/placeholder.svg"}
-                alt={user.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={user.avatar || "/placeholder.svg"} alt={user.name} className="w-full h-full object-cover" />
             </div>
             <span className="font-semibold truncate text-sm">{user.name}</span>
           </div>
@@ -129,15 +116,15 @@ export default function ChatWindow({
             size="icon"
             className="h-6 w-6 text-white hover:bg-white/10 rounded-full"
             onClick={(e) => {
-              e.stopPropagation();
-              handleClose();
+              e.stopPropagation()
+              handleClose()
             }}
           >
             <X className="h-3 w-3" />
           </Button>
         </div>
       </Card>
-    );
+    )
   }
 
   return (
@@ -145,17 +132,11 @@ export default function ChatWindow({
       <CardHeader className="bg-[#0084ff] text-white p-3 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
-            <img
-              src={user.avatar || "/placeholder.svg"}
-              alt={user.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={user.avatar || "/placeholder.svg"} alt={user.name} className="w-full h-full object-cover" />
           </div>
           <div>
             <span className="font-semibold">{user.name}</span>
-            <div className="text-xs opacity-75">
-              {isConnected ? "Online" : "Connecting..."}
-            </div>
+            <div className="text-xs opacity-75">{isConnected ? "Online" : "Connecting..."}</div>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -181,17 +162,10 @@ export default function ChatWindow({
       <CardContent className="p-4 h-[calc(100%-120px)] overflow-y-auto bg-white">
         <div className="space-y-2">
           {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${
-                msg.sender === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+            <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[70%] p-3 rounded-2xl text-sm ${
-                  msg.sender === "user"
-                    ? "bg-[#0084ff] text-white"
-                    : "bg-[#f0f0f0] text-black"
+                  msg.sender === "user" ? "bg-[#0084ff] text-white" : "bg-[#f0f0f0] text-black"
                 }`}
               >
                 {msg.text}
@@ -203,10 +177,7 @@ export default function ChatWindow({
       </CardContent>
 
       <CardFooter className="p-3 border-t bg-white">
-        <form
-          onSubmit={handleSendMessage}
-          className="flex w-full gap-2 items-center"
-        >
+        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-center">
           <Input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -225,5 +196,6 @@ export default function ChatWindow({
         </form>
       </CardFooter>
     </Card>
-  );
+  )
 }
+
