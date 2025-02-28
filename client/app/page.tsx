@@ -44,17 +44,28 @@ const otherUsers: User[] = [
   },
 ];
 
+interface ChatWindowInstance {
+  id: string;
+  user: User;
+}
+
 export default function Home() {
-  const [activeChats, setActiveChats] = useState<User[]>([]);
+  const [activeChats, setActiveChats] = useState<ChatWindowInstance[]>([]);
 
   const startChat = (user: User) => {
-    if (!activeChats.find((chat) => chat.id === user.id)) {
-      setActiveChats([...activeChats, user]);
+    if (!activeChats.find((chat) => chat.user.id === user.id)) {
+      setActiveChats((prev) => [
+        ...prev,
+        {
+          id: `chat-${Date.now()}`,
+          user,
+        },
+      ]);
     }
   };
 
-  const closeChat = (userId: string) => {
-    setActiveChats(activeChats.filter((chat) => chat.id !== userId));
+  const closeChat = (chatId: string) => {
+    setActiveChats((prev) => prev.filter((chat) => chat.id !== chatId));
   };
 
   return (
@@ -63,25 +74,23 @@ export default function Home() {
         <h1 className="text-2xl font-bold mb-6">Chat Application</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* User Profile Section */}
           <div className="md:col-span-1">
             <UserProfile user={currentUser} />
           </div>
 
-          {/* User List Section */}
           <div className="md:col-span-2">
             <UserList users={otherUsers} onStartChat={startChat} />
           </div>
         </div>
       </div>
 
-      {/* Chat Windows */}
-      <div className="fixed bottom-0 right-4 flex gap-3 z-50">
-        {activeChats.map((user) => (
+      <div className="fixed bottom-4 right-4 flex flex-row-reverse gap-3 z-50 items-end">
+        {activeChats.map((chat) => (
           <ChatWindow
-            key={user.id}
-            user={user}
-            onClose={() => closeChat(user.id)}
+            key={chat.id}
+            windowId={chat.id}
+            user={chat.user}
+            onClose={() => closeChat(chat.id)}
           />
         ))}
       </div>
