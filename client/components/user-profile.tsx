@@ -31,7 +31,7 @@ export default function UserProfile({ user }: UserProfileProps) {
             <Mail className="w-5 h-5 text-primary" />
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{user.email}</p>
+              <p className="font-medium">{user.username}</p>
             </div>
           </div>
 
@@ -39,7 +39,7 @@ export default function UserProfile({ user }: UserProfileProps) {
             <Phone className="w-5 h-5 text-primary" />
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium">{user.phone}</p>
+              <p className="font-medium">{user.phoneNumber}</p>
             </div>
           </div>
 

@@ -121,12 +121,8 @@ export default function ChatWindow({
           onClick={() => setMinimized(false)}
         >
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/10">
-              <img
-                src={user.avatar || "/placeholder.svg"}
-                alt={user.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-primary text-white text-xl font-bold">
+              {user.name.charAt(0)}
             </div>
             <span className="font-semibold truncate text-sm">{user.name}</span>
           </div>
@@ -151,11 +147,9 @@ export default function ChatWindow({
       <CardHeader className="bg-[#0084ff] text-white p-3 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
-            <img
-              src={user.avatar || "/placeholder.svg"}
-              alt={user.name}
-              className="w-full h-full object-cover"
-            />
+            <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-bold">
+              {user.name.charAt(0)}
+            </div>
           </div>
           <div>
             <span className="font-semibold">{user.name}</span>

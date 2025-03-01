@@ -12,28 +12,31 @@ import type { User } from "@/types";
 // Mock other users data
 const otherUsers: User[] = [
   {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 (555) 987-6543",
+    citizenIdentificationCard: "001202038007",
+    username: "dangthizeo",
+    name: "Dang Thi Zeo",
+    gender: "male",
+    dateOfBirth: "2020-02-01",
     address: "456 Oak Ave, Town, Country",
-    avatar: "/placeholder.svg?height=40&width=40",
+    phoneNumber: "+1 (555) 987-6543",
   },
   {
-    id: "3",
-    name: "Bob Johnson",
-    email: "bob.johnson@example.com",
-    phone: "+1 (555) 456-7890",
-    address: "789 Pine St, Village, Country",
-    avatar: "/placeholder.svg?height=40&width=40",
+    citizenIdentificationCard: "001202038008",
+    username: "dangthizeo2",
+    name: "Dang Thi Zeo 2",
+    gender: "male",
+    dateOfBirth: "2020-02-01",
+    address: "456 Oak Ave, Town, Country",
+    phoneNumber: "+1 (555) 987-6543",
   },
   {
-    id: "4",
-    name: "Alice Williams",
-    email: "alice.williams@example.com",
-    phone: "+1 (555) 234-5678",
-    address: "101 Elm St, Suburb, Country",
-    avatar: "/placeholder.svg?height=40&width=40",
+    citizenIdentificationCard: "001202038009",
+    username: "dangthizeo3",
+    name: "Dang Thi Zeo 3",
+    gender: "male",
+    dateOfBirth: "2020-02-01",
+    address: "456 Oak Ave, Town, Country",
+    phoneNumber: "+1 (555) 987-6543",
   },
 ];
 
@@ -49,11 +52,13 @@ export default function DashboardPage() {
 
   // Convert auth user to chat user format
   const currentUser: User = {
-    id: user?.id || "",
-    name: user?.username || "",
-    email: "user@example.com", // You can add these fields during registration if needed
-    phone: user?.phoneNumber || "",
+    citizenIdentificationCard: user?.citizenIdentificationCard || "",
+    username: user?.username || "",
+    name: user?.name || "",
+    gender: user?.gender || "",
+    dateOfBirth: user?.dateOfBirth || "",
     address: user?.address || "",
+    phoneNumber: user?.phoneNumber || "",
   };
 
   useEffect(() => {
@@ -63,7 +68,13 @@ export default function DashboardPage() {
   }, [user, router]);
 
   const startChat = (chatUser: User) => {
-    if (!activeChats.find((chat) => chat.user.id === chatUser.id)) {
+    if (
+      !activeChats.find(
+        (chat) =>
+          chat.user.citizenIdentificationCard ===
+          chatUser.citizenIdentificationCard
+      )
+    ) {
       setActiveChats((prev) => [
         ...prev,
         {
