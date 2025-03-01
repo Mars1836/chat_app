@@ -1,16 +1,25 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/lib/auth-context"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
+import ApiPath from "@/api_path";
+import apiPath from "@/api_path";
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -19,13 +28,13 @@ const formSchema = z.object({
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
-})
+});
 
 export default function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
-  const { login } = useAuth()
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { login } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,35 +42,30 @@ export default function LoginForm() {
       username: "",
       password: "",
     },
-  })
+  });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // In a real app, you would validate against a backend
-      const storedUsers = JSON.parse(localStorage.getItem("users") || "[]")
-      const user = storedUsers.find((u: any) => u.username === values.username)
-
-      if (!user || user.password !== values.password) {
-        throw new Error("Invalid credentials")
-      }
-
+      const user = await apiPath.login(values.username, values.password);
       // Login successful
-      login(user)
+      console.log(user.data);
+      login(user.data);
       toast({
         title: "Login successful",
         description: "Welcome back!",
-      })
-      router.push("/dashboard")
+      });
+      router.push("/dashboard");
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-      })
+        description:
+          error instanceof Error ? error.message : "Something went wrong",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -88,7 +92,11 @@ export default function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Enter your password" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,6 +113,5 @@ export default function LoginForm() {
         </Link>
       </div>
     </Form>
-  )
+  );
 }
-

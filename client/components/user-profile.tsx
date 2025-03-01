@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { User } from "@/types"
-import { Mail, Phone, MapPin, UserIcon } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { User } from "@/types";
+import { Mail, Phone, MapPin, UserIcon } from "lucide-react";
 
 interface UserProfileProps {
-  user: User
+  user: User;
 }
 
 export default function UserProfile({ user }: UserProfileProps) {
@@ -11,8 +11,8 @@ export default function UserProfile({ user }: UserProfileProps) {
     <Card className="shadow-md">
       <CardHeader className="bg-primary/10 pb-2">
         <CardTitle className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <img src={user.avatar || "/placeholder.svg"} alt={user.name} className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-primary text-white text-xl font-bold">
+            {user.name.charAt(0)}
           </div>
           <span>My Profile</span>
         </CardTitle>
@@ -53,6 +53,5 @@ export default function UserProfile({ user }: UserProfileProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
-

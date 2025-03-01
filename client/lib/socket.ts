@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 
 // Create a socket instance
-const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
+const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL_SOCKET, {
   reconnectionDelay: 1000,
   reconnection: true,
   reconnectionAttempts: 10,
