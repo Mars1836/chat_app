@@ -24,9 +24,11 @@ class ApiPath {
     gender: string,
     dateOfBirth: string,
     address: string,
-    phoneNumber: string
+    phoneNumber: string,
+    citizenIdentificationCard: string
   ) {
-    return await instance.post(`${this.origin}/api/auth/register`, {
+    return await instance.post(`${this.origin}/api/auth/sign-up`, {
+      citizenIdentificationCard,
       username,
       password,
       name,
@@ -41,6 +43,20 @@ class ApiPath {
   }
   async getUser() {
     return await instance.get(`${this.origin}/api/me`);
+  }
+  async getOtherUsers() {
+    return await instance.get(`${this.origin}/api/users/others`);
+  }
+  async getUserById(id: string) {
+    return await instance.get(`${this.origin}/api/users/${id}`);
+  }
+  async getMessages(senderId: string, receiverId: string) {
+    return await instance.get(
+      `${this.origin}/api/messages/${senderId}/${receiverId}`
+    );
+  }
+  async getUserByUsername(username: string) {
+    return await instance.get(`${this.origin}/api/users/username/${username}`);
   }
 }
 const apiPath = new ApiPath(origin || "http://localhost:3000");

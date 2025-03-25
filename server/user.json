@@ -1,0 +1,10 @@
+{
+    "citizenIdentificationCard": "1234567890",
+    "username": "hauvu",
+    "name": "Hau Vu",
+    "password": "123456",
+    "gender": "male",
+    "dateOfBirth": "1990-01-01",
+    "address": "123 Main St, Anytown, USA",
+    "phoneNumber": "1234567890"
+}

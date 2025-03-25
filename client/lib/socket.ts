@@ -9,6 +9,7 @@ const socket = io(process.env.NEXT_PUBLIC_BACKEND_URL_SOCKET, {
   agent: false,
   upgrade: false,
   rejectUnauthorized: false,
+  autoConnect: false,
 });
 
 // Add event listeners for connection

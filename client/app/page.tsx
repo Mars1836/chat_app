@@ -3,46 +3,8 @@ import type { User } from "@/types";
 import LoginForm from "@/components/login-form";
 
 // Mock current user data
-const currentUser: User = {
-  citizenIdentificationCard: "001202038007",
-  username: "dangthizeo",
-  name: "Dang Thi Zeo",
-  gender: "male",
-  dateOfBirth: "2020-02-01",
-  address: "456 Oak Ave, Town, Country",
-  phoneNumber: "+1 (555) 987-6543",
-};
 
 // Mock other users data
-const otherUsers: User[] = [
-  {
-    citizenIdentificationCard: "001202038008",
-    username: "dangthizeo2",
-    name: "Dang Thi Zeo 2",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-  {
-    citizenIdentificationCard: "001202038009",
-    username: "dangthizeo3",
-    name: "Dang Thi Zeo 3",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-  {
-    citizenIdentificationCard: "001202038010",
-    username: "dangthizeo4",
-    name: "Dang Thi Zeo 4",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-];
 
 interface ChatWindowInstance {
   id: string;

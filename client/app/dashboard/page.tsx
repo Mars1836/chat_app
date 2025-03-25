@@ -1,87 +1,181 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import UserProfile from "@/components/user-profile";
 import UserList from "@/components/user-list";
 import ChatWindow from "@/components/chat-window";
-import type { User } from "@/types";
-
+import type { Message, User } from "@/types";
+import socket from "@/lib/socket";
+import apiPath from "@/api_path";
 // Mock other users data
-const otherUsers: User[] = [
-  {
-    citizenIdentificationCard: "001202038007",
-    username: "dangthizeo",
-    name: "Dang Thi Zeo",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-  {
-    citizenIdentificationCard: "001202038008",
-    username: "dangthizeo2",
-    name: "Dang Thi Zeo 2",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-  {
-    citizenIdentificationCard: "001202038009",
-    username: "dangthizeo3",
-    name: "Dang Thi Zeo 3",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-];
-
-interface ChatWindowInstance {
-  id: string;
-  user: User;
-}
+import type { ChatWindowInstance } from "@/types";
+import { decryptMessage, encryptMessage } from "@/utils";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [otherUsers, setOtherUsers] = useState<User[]>([]);
   const [activeChats, setActiveChats] = useState<ChatWindowInstance[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const handleNewMessage = useCallback(
+    async (msg: Message) => {
+      let chatUser: User;
+      if (msg.senderId === user?.id) {
+        msg.sender = "user";
 
-  // Convert auth user to chat user format
-  const currentUser: User = {
-    citizenIdentificationCard: user?.citizenIdentificationCard || "",
-    username: user?.username || "",
-    name: user?.name || "",
-    gender: user?.gender || "",
-    dateOfBirth: user?.dateOfBirth || "",
-    address: user?.address || "",
-    phoneNumber: user?.phoneNumber || "",
-  };
+        chatUser =
+          otherUsers.find((user) => user.id === msg.receiverId) ||
+          (await apiPath.getUserById(msg.receiverId)).data;
+      } else {
+        msg.sender = "other";
+        chatUser =
+          otherUsers.find((user) => user.id === msg.senderId) ||
+          (await apiPath.getUserById(msg.senderId)).data;
+      }
+      let decryptedMsg: Message;
+      if (msg.sender === "user") {
+        decryptedMsg = decryptMessage(
+          msg,
+          msg.ivB || "",
+          user?.privateKey || ""
+        );
+        setActiveChats((prev) =>
+          prev.map((chat) =>
+            chat.id === chatUser.id
+              ? { ...chat, messages: [...chat.messages, decryptedMsg] }
+              : chat
+          )
+        );
+      } else {
+        decryptedMsg = decryptMessage(
+          msg,
+          msg.ivA || "",
+          user?.privateKey || ""
+        );
+        const existingChat = activeChats.find(
+          (chat) => chat.id === chatUser.id
+        );
+        if (existingChat) {
+          setActiveChats((prev) =>
+            prev.map((chat) =>
+              chat.id === chatUser.id
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, decryptedMsg],
+                  }
+                : chat
+            )
+          );
+        } else {
+          const messages = await firstLoadMessages(chatUser);
+          setActiveChats((prev) => [
+            {
+              id: chatUser.id,
+              user: chatUser,
+              messages: messages,
+            },
+            ...prev,
+          ]);
+        }
+      }
+    },
+    [user, otherUsers, activeChats]
+  );
+  const firstLoadMessages = useCallback(
+    async (chatUser: User) => {
+      const { data } = await apiPath.getMessages(user?.id || "", chatUser.id);
+      const messages = data.map((msg: Message) => {
+        if (msg.senderId === user?.id) {
+          msg.sender = "user";
+          msg.text = decryptMessage(
+            msg,
+            msg.ivB || "",
+            user?.privateKey || ""
+          ).text;
+        } else {
+          msg.sender = "other";
+          msg.text = decryptMessage(
+            msg,
+            msg.ivA || "",
+            user?.privateKey || ""
+          ).text;
+        }
+        return msg;
+      });
+      return messages;
+    },
+    [user]
+  );
+  useEffect(() => {
+    socket.emit("get-online-users");
 
+    if (!user) {
+      return;
+    }
+    const getOtherUsers = async () => {
+      const res = await apiPath.getOtherUsers();
+      setOtherUsers(res.data);
+    };
+    socket.on("onlineUsers", (userIds: string[]) => {
+      setOnlineUsers(userIds);
+    });
+    getOtherUsers();
+    return () => {
+      socket.off("onlineUsers");
+    };
+  }, [user]);
   useEffect(() => {
     if (!user) {
       router.push("/");
+      return;
     }
-  }, [user, router]);
+    socket.on("chat_message", handleNewMessage);
+    socket.on("onlineUsers", (userIds: string[]) => {
+      setOnlineUsers(userIds);
+    });
+    return () => {
+      socket.off("chat_message");
+      socket.off("onlineUsers");
+    };
+  }, [user, router, activeChats, otherUsers]);
 
-  const startChat = (chatUser: User) => {
-    if (
-      !activeChats.find(
-        (chat) =>
-          chat.user.citizenIdentificationCard ===
-          chatUser.citizenIdentificationCard
-      )
-    ) {
+  const startChat = async (chatUser: User) => {
+    const messages = await firstLoadMessages(chatUser);
+    if (!activeChats.find((chat) => chat.user.id === chatUser.id)) {
       setActiveChats((prev) => [
         ...prev,
         {
-          id: `chat-${Date.now()}`,
+          id: chatUser.id,
           user: chatUser,
+          messages: messages,
         },
       ]);
+    }
+  };
+  const handleSendMessage = (message: string, userReceiver: User) => {
+    if (message.trim()) {
+      const messageData: Message = {
+        text: message,
+        senderId: user?.id || "",
+        receiverId: userReceiver.id,
+        id: `${Date.now()}-${Math.random()}`.toString().slice(0, 15),
+        sender: "user",
+        timestamp: Date.now(),
+      };
+      if (!userReceiver.publicKey || !user?.publicKey) {
+        console.log("User not found");
+        return;
+      }
+      const encryptedMessage = encryptMessage(
+        messageData,
+        userReceiver.publicKey,
+        user?.publicKey
+      );
+      socket.emit("chat_message", encryptedMessage);
+      handleNewMessage(encryptedMessage);
     }
   };
 
@@ -121,27 +215,39 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* User Profile Section */}
           <div className="md:col-span-1">
-            <UserProfile user={currentUser} />
+            <UserProfile user={user} />
           </div>
 
           {/* User List Section */}
           <div className="md:col-span-2">
-            <UserList users={otherUsers} onStartChat={startChat} />
+            <UserList
+              users={otherUsers}
+              onStartChat={startChat}
+              onlineUsers={onlineUsers}
+            />
           </div>
         </div>
       </div>
 
       {/* Chat Windows */}
-      <div className="fixed bottom-4 right-4 flex flex-row-reverse gap-3 z-50">
-        {activeChats.map((chat) => (
-          <ChatWindow
-            key={chat.id}
-            windowId={chat.id}
-            user={chat.user}
-            onClose={() => closeChat(chat.id)}
-            currentUser={currentUser}
-          />
-        ))}
+      <div className="fixed bottom-4 right-4 flex flex-row-reverse gap-3 z-50 items-end">
+        {activeChats.map((chat) => {
+          const isOnline = onlineUsers.includes(chat.user.id);
+
+          return (
+            <ChatWindow
+              key={chat.id}
+              windowId={chat.id}
+              user={chat.user}
+              onClose={() => closeChat(chat.id)}
+              isOnline={isOnline}
+              messages={chat.messages}
+              onSendMessage={(message, userReceiver) =>
+                handleSendMessage(message, userReceiver)
+              }
+            />
+          );
+        })}
       </div>
     </div>
   );

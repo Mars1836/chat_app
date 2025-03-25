@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import ApiPath from "@/api_path";
 import apiPath from "@/api_path";
-
+import socket from "@/lib/socket";
 const formSchema = z.object({
   username: z.string().min(3, {
     message: "Username must be at least 3 characters.",
@@ -48,15 +48,19 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const user = await apiPath.login(values.username, values.password);
+      const { data: user } = await apiPath.login(
+        values.username,
+        values.password
+      );
+      socket.emit("login", user.data.id);
       // Login successful
-      console.log(user.data);
       login(user.data);
+
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (error) {
       toast({
         variant: "destructive",

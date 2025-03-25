@@ -11,102 +11,48 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { User } from "@/types";
+import type { User, Message } from "@/types";
 import { X, Send, Minimize } from "lucide-react";
 import socket from "@/lib/socket";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "other";
-  timestamp: number;
-  senderName: string;
-}
-
 interface ChatWindowProps {
   user: User;
-  currentUser: User;
   onClose: () => void;
   windowId: string;
+  messages: Message[];
+  onSendMessage: (message: string, userReceiver: User) => void;
+  isOnline: boolean;
 }
 
 export default function ChatWindow({
   user,
-  currentUser,
   onClose,
   windowId,
+  messages,
+  onSendMessage,
+  isOnline,
 }: ChatWindowProps) {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
   const [minimized, setMinimized] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onConnect() {
-      setIsConnected(true);
-    }
-
-    function onDisconnect() {
-      setIsConnected(false);
-    }
-
-    function onChatMessage(msg: { text: string; senderName: string }) {
-      if (msg.senderName === currentUser.name) return;
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          text: msg.text,
-          sender: "other",
-          timestamp: Date.now(),
-          senderName: msg.senderName,
-        },
-      ]);
-    }
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on(`chat message ${windowId}`, onChatMessage);
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off(`chat message ${windowId}`, onChatMessage);
-    };
-  }, [currentUser.name, windowId]);
-
+  const windowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!minimized) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
   }, [minimized]);
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim() && isConnected) {
-      const messageData = {
-        text: message,
-        senderName: currentUser.name,
-      };
-
-      socket.emit("chat message", messageData);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${Date.now()}-${Math.random()}`,
-          text: message,
-          sender: "user",
-          timestamp: Date.now(),
-          senderName: currentUser.name,
-        },
-      ]);
-
-      setMessage("");
-    }
-  };
+  useEffect(() => {
+    const scrollTop = windowRef.current?.scrollTop;
+    const scrollBottom =
+      windowRef.current?.scrollHeight! -
+      scrollTop! -
+      windowRef.current?.clientHeight!;
+    requestAnimationFrame(() => {
+      if (scrollBottom < 100 && messagesEndRef.current) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      }
+    });
+  }, [messages]);
 
   const handleClose = () => {
     socket.off(`chat message ${windowId}`);
@@ -118,14 +64,17 @@ export default function ChatWindow({
       <Card className="w-[200px] h-12 shadow-lg rounded-lg overflow-hidden cursor-pointer">
         <div
           className="bg-[#0084ff] text-white p-3 flex items-center justify-between h-full"
-          onClick={() => setMinimized(false)}
+          onClick={() => {
+            setMinimized(false);
+          }}
         >
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-primary text-white text-xl font-bold">
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary text-white text-xl font-bold flex items-center justify-center">
               {user.name.charAt(0)}
             </div>
             <span className="font-semibold truncate text-sm">{user.name}</span>
           </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -146,15 +95,22 @@ export default function ChatWindow({
     <Card className="w-[330px] h-[450px] shadow-lg rounded-lg overflow-hidden">
       <CardHeader className="bg-[#0084ff] text-white p-3 flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
-            <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-bold">
-              {user.name.charAt(0)}
+          <div className="relative">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
+              <div className="w-full h-full flex items-center justify-center bg-primary text-white text-xl font-bold">
+                {user?.name?.charAt(0) || "U"}
+              </div>
             </div>
+            <div
+              className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-[#e1eef9] ${
+                isOnline ? "bg-green-500" : "bg-gray-400"
+              }`}
+            ></div>
           </div>
           <div>
             <span className="font-semibold">{user.name}</span>
             <div className="text-xs opacity-75">
-              {isConnected ? "Online" : "Connecting..."}
+              {isOnline ? "Online" : "Offline"}
             </div>
           </div>
         </div>
@@ -178,7 +134,10 @@ export default function ChatWindow({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 h-[calc(100%-120px)] overflow-y-auto bg-white">
+      <CardContent
+        className="p-4 h-[calc(100%-120px)] overflow-y-auto bg-white"
+        ref={windowRef}
+      >
         <div className="space-y-2">
           {messages.map((msg) => (
             <div
@@ -188,7 +147,7 @@ export default function ChatWindow({
               }`}
             >
               <div
-                className={`max-w-[70%] p-3 rounded-2xl text-sm ${
+                className={`max-w-[70%] p-3 rounded-2xl text-sm break-words whitespace-pre-wrap ${
                   msg.sender === "user"
                     ? "bg-[#0084ff] text-white"
                     : "bg-[#f0f0f0] text-black"
@@ -198,13 +157,18 @@ export default function ChatWindow({
               </div>
             </div>
           ))}
+
           <div ref={messagesEndRef} />
         </div>
       </CardContent>
 
       <CardFooter className="p-3 border-t bg-white">
         <form
-          onSubmit={handleSendMessage}
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSendMessage(message, user);
+            setMessage("");
+          }}
           className="flex w-full gap-2 items-center"
         >
           <Input
@@ -212,13 +176,11 @@ export default function ChatWindow({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
             className="flex-1 rounded-full border-gray-200 focus-visible:ring-1 focus-visible:ring-[#0084ff] focus-visible:ring-offset-0"
-            disabled={!isConnected}
           />
           <Button
             type="submit"
             size="icon"
             className="h-9 w-9 rounded-full bg-[#0084ff] hover:bg-[#0084ff]/90 text-white"
-            disabled={!isConnected}
           >
             <Send className="h-4 w-4" />
           </Button>

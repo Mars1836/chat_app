@@ -4,56 +4,31 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { User } from "@/types";
-import { Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
+import {
+  Phone,
+  MapPin,
+  ArrowLeft,
+  User as UserIcon,
+  IdCard as IdCardIcon,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 import Link from "next/link";
+import { use, useEffect, useState } from "react";
+import apiPath from "@/api_path";
 
 // Mock users data
-const users: User[] = [
-  {
-    citizenIdentificationCard: "001202038007",
-    username: "dangthizeo",
-    name: "Dang Thi Zeo",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "789 Pine St, Village, Country",
-    phoneNumber: "+1 (555) 456-7890",
-  },
-  {
-    citizenIdentificationCard: "001202038008",
-    username: "dangthizeo2",
-    name: "Dang Thi Zeo 2",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "456 Oak Ave, Town, Country",
-    phoneNumber: "+1 (555) 987-6543",
-  },
-  {
-    citizenIdentificationCard: "001202038009",
-    username: "dangthizeo3",
-    name: "Dang Thi Zeo 3",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "789 Pine St, Village, Country",
-    phoneNumber: "+1 (555) 456-7890",
-  },
-  {
-    citizenIdentificationCard: "001202038010",
-    username: "dangthizeo4",
-    name: "Dang Thi Zeo 4",
-    gender: "male",
-    dateOfBirth: "2020-02-01",
-    address: "101 Elm St, Suburb, Country",
-    phoneNumber: "+1 (555) 234-5678",
-  },
-];
 
 export default function UserProfilePage() {
   const params = useParams();
-  const userId = params.id as string;
-
-  // Find the user with the matching ID
-  const user = users.find((u) => u.citizenIdentificationCard === userId);
-
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const response = await apiPath.getUserByUsername(params.id as string);
+      setUser(response.data);
+      console.log(response.data);
+    };
+    fetchUser();
+  }, [params.id]);
   if (!user) {
     return (
       <div className="container mx-auto p-4 text-center">
@@ -89,27 +64,36 @@ export default function UserProfilePage() {
         <CardContent className="pt-6">
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <Mail className="w-6 h-6 text-primary" />
+              <UserIcon className="w-6 h-6 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="text-sm text-muted-foreground">Username</p>
                 <p className="font-medium">{user.username}</p>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
-              <Phone className="w-6 h-6 text-primary" />
+              <IdCardIcon className="w-6 h-6 text-primary" />
               <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{user.phoneNumber}</p>
+                <p className="text-sm text-muted-foreground">
+                  Citizen Identification Card
+                </p>
+                <p className="font-medium">{user.citizenIdentificationCard}</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <MapPin className="w-6 h-6 text-primary" />
-              <div>
-                <p className="text-sm text-muted-foreground">Address</p>
-                <p className="font-medium">{user.address}</p>
+            {user.dateOfBirth && (
+              <div className="flex items-center gap-3">
+                <CalendarIcon className="w-6 h-6 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Date of Birth</p>
+                  <p className="font-medium">{user.dateOfBirth}</p>
+                </div>
               </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <MapPin className="w-6 h-6 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Address</p>
+              <p className="font-medium">{user.address}</p>
             </div>
           </div>
         </CardContent>
