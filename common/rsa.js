@@ -164,26 +164,4 @@ function decrypt(encryptedStr, privateKeyStr) {
   return message;
 }
 
-// Sử dụng các hàm
-function demo() {
-  // Tạo cặp khóa dạng chuỗi text
-  const { publicKey, privateKey } = generateKeyPair();
-  console.log("Public Key (Text):", publicKey);
-  console.log("Private Key (Text):", privateKey);
-
-  // Tin nhắn cần mã hóa
-  const message = "Hello World! áda am,snd a ápl;k;al dkqp m;alsmda;lsm";
-  console.log("Tin nhắn gốc:", message);
-
-  // Mã hóa tin nhắn
-  const encrypted = encrypt(message, publicKey);
-  console.log("Tin nhắn đã mã hóa:", encrypted);
-
-  // Giải mã tin nhắn
-  const decrypted = decrypt(encrypted, privateKey);
-  console.log("Tin nhắn đã giải mã:", decrypted);
-}
-
-// Chạy demo
-demo();
 module.exports = { encrypt, decrypt, generateKeyPair };

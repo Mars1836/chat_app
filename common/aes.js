@@ -1,6 +1,3 @@
-// link: https://www.kavaliro.com/wp-content/uploads/2014/03/AES.pdf
-// for debugging: https://www.cryptool.org/en/cto/aes-step-by-step
-
 class AES {
   constructor(secretKey = process.env.SECRET_KEY || "hello world ,aes") {
     this.secretKey = secretKey;
@@ -221,21 +218,27 @@ class AES {
     return state;
   }
 
-  // Hàm sử dụng cho pha mixColumns
+  // Hàm sử dụng cho pha mixColumns phép toán diễn ra trong trường GF(2^8)
   //p = (a×b₀) ⊕ (a×2×b₁) ⊕ (a×2²×b₂) ⊕ ... ⊕ (a×2⁷×b₇)
   gmul(a, b) {
     let p = 0;
     for (let i = 0; i < 8; i++) {
+      // Kiểm tra bit thấp nhất của b (bit 0)
+      // Nếu bit này là 1, thêm (XOR) giá trị hiện tại của a vào p
       if (b & 1) {
         p ^= a;
       }
-      const hiBitSet = a & 0x80;
-      a <<= 1;
+      // Lưu trạng thái bit cao nhất của a (bit 7) trước khi dịch trái
+      const hiBitSet = a & 0x80; // 0x80 = 10000000 trong nhị phân
+      a <<= 1; // Dịch trái a 1 bit
+      // Nếu bit cao nhất của a là 1, thực hiện phép XOR với đa thức tối giản x^8 + x^4 + x^3 + x + 1
       if (hiBitSet) {
         a ^= 0x1b; /* x^8 + x^4 + x^3 + x + 1 */
       }
+      // Dịch phải b một bit để kiểm tra bit tiếp theo
       b >>= 1;
     }
+    // Đảm bảo kết quả là một byte (8 bit) bằng cách lấy 8 bit thấp nhất
     return p & 0xff;
   }
 

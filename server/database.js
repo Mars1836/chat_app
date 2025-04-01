@@ -80,12 +80,26 @@ function createTable() {
 
 function createMessageTable() {
   connection.query(
-    "CREATE TABLE IF NOT EXISTS messages ( id VARCHAR(255) PRIMARY KEY, chatId VARCHAR(255), text TEXT, senderId VARCHAR(255), receiverId VARCHAR(255), timestamp VARCHAR(255), ivA VARCHAR(255), ivB VARCHAR(255))",
+    `
+    CREATE TABLE IF NOT EXISTS messages (
+      id VARCHAR(255) PRIMARY KEY,
+      chatId VARCHAR(255),
+      text TEXT,
+      senderId VARCHAR(255),
+      receiverId VARCHAR(255),
+      timestamp VARCHAR(255),
+      ivA VARCHAR(255),
+      ivB VARCHAR(255),
+      FOREIGN KEY (senderId) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (receiverId) REFERENCES users(id) ON DELETE CASCADE
+    )`,
     function (err, results) {
       if (err) {
         console.log(err.message);
+        return;
       }
-      connection.query("create index idx_chatId on messages (chatId)");
+
+      console.log("Table messages created successfully!");
     }
   );
 }
